@@ -67,7 +67,7 @@ class Generator_v4(nn.Module):
         # unet 2
 
         amap1 = self.mp(attention_map)
-        amap2 = self.mp(attention_map)
+        amap2 = self.mp(amap1)
 
         # unet main
 
@@ -102,3 +102,11 @@ class Generator_v4(nn.Module):
             return out, out1, out2
         else:
             return out
+
+
+def get_model_set(device):
+    Gxy = Generator_v4().to(device)
+    Gyx = Generator_v4().to(device)
+    Dx = Discriminator().to(device)
+    Dy = Discriminator().to(device)
+    return Gxy, Gyx, Dx, Dy

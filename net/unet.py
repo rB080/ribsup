@@ -24,7 +24,7 @@ class UNet(nn.Module):
         self.inc = DoubleConv(3, 64)
         self.outconv = OutConv(64, 1)
 
-    def forward(self, x, factor=0.001, visual=False):
+    def forward(self, x):
 
         x1 = self.inc(x)
 
@@ -43,3 +43,7 @@ class UNet(nn.Module):
         out = self.outconv(y1)
         out = self.act(out)
         return out
+
+
+def get_model():
+    return UNet()
