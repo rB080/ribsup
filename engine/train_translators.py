@@ -10,7 +10,7 @@ def run(args):
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
-    #device = torch.device('cpu')
+    device = torch.device('cpu')
     print("train_translators device:", device)
     Gxy, Gyx, Dx, Dy = translator.get_model_set(device)
     optimizer_G = torch.optim.Adam(
