@@ -73,6 +73,8 @@ class Translation_Dataset(Dataset):
             elif split == "test":
                 self.imX, self.imY, self.mapX, self.mapY = self.imX[split_point:], self.imY[
                     split_point:], self.mapX[split_point:], self.mapY[split_point:]
+            # self.imX, self.imY, self.mapX, self.mapY = self.imX[0:1], self.imY[
+            #    0:1], self.mapX[0:1], self.mapY[0:1]  # for cpu testing
             print('num imX = ', len(self.imX))
             print('num imY = ', len(self.imY))
             print('num maps of each kind = ', len(self.mapX), len(self.mapY))
