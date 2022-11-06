@@ -57,7 +57,7 @@ def read_dataset(root_path, load_masks=True):
     return imX, imY
 
 
-class Eye_Dataset(Dataset):
+class Translation_Dataset(Dataset):
 
     def __init__(self, root_path):
         self.root = root_path
@@ -83,7 +83,7 @@ class Eye_Dataset(Dataset):
 
 
 def get_loader(root_path, batch_size=1, shuffle=True):
-    dataset = Eye_Dataset(root_path)
+    dataset = Translation_Dataset(root_path)
     length = len(dataset)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return dataset, length, loader
