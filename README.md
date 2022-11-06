@@ -1,6 +1,10 @@
 # ribsup
-Rib Suppression
+
 ![](rick-roll.gif)
+
+rB : 9* - 2 : Rukh
+Anyways, back to the point...
+Rib Suppression
 
 
 ### Useful code fragments:
