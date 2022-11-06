@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
 def conv(in_channels, out_channels, kernel_size, stride=1, padding=1, batch_norm=True):
     """Creates a convolutional layer, with optional batch normalization.
     """
@@ -39,16 +40,19 @@ class ResidualBlock(nn.Module):
 
         return out_2
 
+
 def deconv(in_channels, out_channels, kernel_size, stride=2, padding=1, batch_norm=True):
     """Creates a transpose convolutional layer, with optional batch normalization.
     """
     layers = []
     # append transpose conv layer
-    layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False))
+    layers.append(nn.ConvTranspose2d(in_channels, out_channels,
+                  kernel_size, stride, padding, bias=False))
     # optional batch norm layer
     if batch_norm:
         layers.append(nn.BatchNorm2d(out_channels))
     return nn.Sequential(*layers)
+
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
@@ -92,24 +96,26 @@ class Up(nn.Module):
 
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+            self.up = nn.Upsample(
+                scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
         else:
-            self.up = nn.ConvTranspose2d(in_channels , in_channels // 2, kernel_size=2, stride=2)
+            self.up = nn.ConvTranspose2d(
+                in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
-
 
     def forward(self, x1, x2=None):
         x1 = self.up(x1)
         # input is CHW
-        #diffY = 0#x1.size()[2]
-        #diffX = 0#x1.size()[3]
+        # diffY = 0#x1.size()[2]
+        # diffX = 0#x1.size()[3]
 
         #x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
         if x2 is not None:
             x = torch.cat([x2, x1], dim=1)
             x = self.conv(x)
-        else: x = self.conv(x1)
+        else:
+            x = self.conv(x1)
         return x
 
 
@@ -136,11 +142,13 @@ class BatchNorm(nn.Module):
         x = self.relu(x)
         return x
 
+
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size=7, out_channels=1):
         super(SpatialAttention, self).__init__()
 
-        self.conv1 = nn.Conv2d(2, out_channels, kernel_size, padding=kernel_size//2, bias=False)
+        self.conv1 = nn.Conv2d(2, out_channels, kernel_size,
+                               padding=kernel_size//2, bias=False)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
