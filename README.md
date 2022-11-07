@@ -1,12 +1,5 @@
 # ribsup
 
-![](rick-roll.gif)
-
-## rB : 9* - 2 : Rukh
-Anyways, back to the point...
-Rib Suppression
-
-
 ### Useful code fragments:
 1. Clone repository: 
 ```
