@@ -6,16 +6,11 @@ import os.path as osp
 
 
 def run(args):
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    #device = torch.device('cpu')
+    device = torch.device(args.device)
     print("train_segmentor device:", device)
-    model = unet.get_model()
-    model.to(device)
+    model = unet.get_model(args)
 
-    _, trainset_size, train_loader = load_segdata.get_loader(args.segdata_root)
+    _, trainset_size, train_loader = load_segdata.get_loader(args)
 
     optimizer = torch.optim.Adam(
         params=model.parameters(), lr=args.seg_lr, weight_decay=0.0001)

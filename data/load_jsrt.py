@@ -67,12 +67,15 @@ class Translation_Dataset(Dataset):
         if get_maps:
             self.imX, self.imY, self.mapX, self.mapY = read_dataset(self.root)
             split_point = 9 * len(self.imX) // 10
+            if split_point % 2 == 1: split_point -= 1
             if split == "train":
                 self.imX, self.imY, self.mapX, self.mapY = self.imX[:split_point], self.imY[
                     :split_point], self.mapX[:split_point], self.mapY[:split_point]
             elif split == "test":
                 self.imX, self.imY, self.mapX, self.mapY = self.imX[split_point:], self.imY[
                     split_point:], self.mapX[split_point:], self.mapY[split_point:]
+            # self.imX, self.imY, self.mapX, self.mapY = self.imX[0:1], self.imY[
+            #    0:1], self.mapX[0:1], self.mapY[0:1]  # for cpu testing
             print('num imX = ', len(self.imX))
             print('num imY = ', len(self.imY))
             print('num maps of each kind = ', len(self.mapX), len(self.mapY))
@@ -88,6 +91,7 @@ class Translation_Dataset(Dataset):
 
     def __getitem__(self, index):
         if self.map_requirement:
+            #print(len(self.imX), len(self.imY), len(self.mapX), len(self.mapY), index)
             imX, imY, mapX, mapY = loader(
                 self.imX[index], self.imY[index], self.mapX[index], self.mapY[index])
         else:
@@ -109,8 +113,8 @@ class Translation_Dataset(Dataset):
         return len(self.imX)
 
 
-def get_loader(root_path, split="train", get_maps=True, batch_size=1, shuffle=True):
-    dataset = Translation_Dataset(root_path, split, get_maps)
+def get_loader(args, split="train", get_maps=True, shuffle=True):
+    dataset = Translation_Dataset(args.data_root, split, get_maps)
     length = len(dataset)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    loader = DataLoader(dataset, batch_size=args.trans_batch, shuffle=shuffle, num_workers=args.num_workers)
     return dataset, length, loader

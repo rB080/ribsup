@@ -28,7 +28,7 @@ def train_one_epoch(epoch, model, loader, dataset_size, optimizer, device, log_p
     else:
         log = logger.create_log(
             osp.join(log_path, "unet_train_logs.json"), mode="segmentation")
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         img, map = pack["img"].to(device), pack["map"].to(device)
         pred = model(img)
@@ -53,7 +53,7 @@ def save_data(model, loader, dataset_size, device, save_path):
     model.eval()
     print("==========================================================================")
     print("Generating Masks")
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     if osp.isdir(osp.join(save_path, "mapX")) == False:
         os.makedirs(osp.join(save_path, "mapX"))
     if osp.isdir(osp.join(save_path, "mapY")) == False:
@@ -68,9 +68,9 @@ def save_data(model, loader, dataset_size, device, save_path):
                          dtype=np.uint8).transpose(1, 2, 0)
 
         cv2.imwrite(osp.join(save_path, "mapX",
-                    name[0].split("\\")[-1]), predX)
+                    name[0].split("/")[-1]), predX)
         cv2.imwrite(osp.join(save_path, "mapY",
-                    name[0].split("\\")[-1]), predY)
+                    name[0].split("/")[-1]), predY)
     print("Done!")
     print("==========================================================================")
     print("==========================================================================")

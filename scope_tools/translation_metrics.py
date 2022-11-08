@@ -110,5 +110,5 @@ def psnr(img1, img2):
 def translation_metrics(img, pred):
     ssim = SSIM().forward(img, pred)
     psnr_score = psnr(img, pred)
-    dict = {"ssim": ssim, "psnr": psnr_score}
+    dict = {"ssim": ssim * img.shape[0], "psnr": psnr_score * img.shape[0]}
     return dict

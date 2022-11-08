@@ -1,0 +1,1 @@
+python console.py --trans_batch 16 --workspace exp1 --log_name translation_log --seg_epochs 100 --seg_lr 1e-3 --trans_epochs 100 --trans_lr 1e-5 --train_segmentor False --make_segmentation False --train_translators False --make_translations True

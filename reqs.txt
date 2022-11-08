@@ -1,12 +1,12 @@
-#torch
-#torchvision
+torch
+torchvision
 numpy
 pandas
 matplotlib
 opencv-python
-scipy
+#scipy
 tqdm
-scikit-image
+#scikit-image
 tensorboard
-sklearn
+#sklearn
 argparse

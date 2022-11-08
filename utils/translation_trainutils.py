@@ -3,6 +3,8 @@ import torch.nn as nn
 import os.path as osp
 import os
 from tqdm import tqdm
+import numpy as np
+import cv2
 
 
 def get_lr(optimizer):
@@ -32,7 +34,7 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
         log_Gyx = logger.create_log(
             osp.join(log_path, "Gyx_train_logs.json"), mode="translation")
 
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device)
@@ -97,8 +99,8 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
         trmets_xy = translation_metrics.translation_metrics(imY, pxy)
         trmets_yx = translation_metrics.translation_metrics(imX, pyx)
         for k in trmets_xy.keys():
-            epoch_data_Gxy[k] += trmets_xy[k]/dataset_size
-            epoch_data_Gyx[k] += trmets_yx[k]/dataset_size
+            epoch_data_Gxy[k] += trmets_xy[k].item()/dataset_size
+            epoch_data_Gyx[k] += trmets_yx[k].item()/dataset_size
 
     # Metric Logging
     logger.log_epoch(log_Gxy, epoch_data_Gxy)
@@ -134,7 +136,7 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
         log_Gyx = logger.create_log(
             osp.join(log_path, "Gyx_test_logs.json"), mode="translation")
 
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device)
@@ -143,8 +145,8 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
         trmets_xy = translation_metrics.translation_metrics(imY, pxy)
         trmets_yx = translation_metrics.translation_metrics(imX, pyx)
         for k in trmets_xy.keys():
-            epoch_data_Gxy[k] += trmets_xy[k]/dataset_size
-            epoch_data_Gyx[k] += trmets_yx[k]/dataset_size
+            epoch_data_Gxy[k] += trmets_xy[k].item()/dataset_size
+            epoch_data_Gyx[k] += trmets_yx[k].item()/dataset_size
     # Metric Logging
     logger.log_epoch(log_Gxy, epoch_data_Gxy)
     logger.save_log(log_Gxy, osp.join(log_path, "Gxy_test_logs.json"))
@@ -157,3 +159,27 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
     print("==========================================================================")
     print("==========================================================================")
     return epoch_data_Gxy, epoch_data_Gyx
+
+
+def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
+    Gxy.eval()
+    Gyx.eval()
+    print("==========================================================================")
+    print("Generating Translations")
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
+    for batch_idx, pack in dataset_iterator:
+        imX, imY, mapX, mapY, name = pack["imX"].to(device), pack["imY"].to(
+            device), pack["mapX"].to(device), pack["mapY"].to(device), pack["name"]
+        pyx = Gyx.forward(imY, mapY, deep_supervision=False) * 255.0
+        pxy = Gxy.forward(imX, mapX, deep_supervision=False) * 255.0
+        pyx = np.array(pyx[0].detach().cpu(),
+                       dtype=np.uint8).transpose(1, 2, 0)
+        pxy = np.array(pxy[0].detach().cpu(),
+                       dtype=np.uint8).transpose(1, 2, 0)
+        cv2.imwrite(osp.join(save_path, "Y_to_X",
+                    name[0].split("/")[-1]), pyx)
+        cv2.imwrite(osp.join(save_path, "X_to_Y",
+                    name[0].split("/")[-1]), pxy)
+    print("Done!")
+    print("==========================================================================")
+    print("==========================================================================")

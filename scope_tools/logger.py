@@ -1,4 +1,5 @@
 import json
+import sys
 
 PRESET_TRANSLATION_LOGS = ["epochs", "lr", "loss", "ssim", "psnr"]
 PRESET_SEGMENTATION_LOGS = ["epochs", "lr", "loss",
@@ -44,3 +45,17 @@ def log_epoch(log, epoch_data):
 def save_log(log, path):
     with open(path, "w") as file:
         file.write(json.dumps(log))
+
+
+class Logger(object):
+    def __init__(self, outfile):
+        self.terminal = sys.stdout
+        self.log = open(outfile, "a")
+        sys.stdout = self
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()

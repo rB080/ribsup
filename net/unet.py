@@ -45,5 +45,10 @@ class UNet(nn.Module):
         return out
 
 
-def get_model():
-    return UNet()
+def get_model(args):
+    model = UNet()
+    if args.device == 'cuda' and args.dataparallel == True:
+        model = torch.nn.DataParallel(model).cuda()
+    elif args.device == 'cuda' and args.dataparallel == False:
+        model.to(device)
+    return model

@@ -56,8 +56,8 @@ class Segmentation_Dataset(Dataset):
         return len(self.images)
 
 
-def get_loader(root_path, batch_size=1, shuffle=True):
-    dataset = Segmentation_Dataset(root_path)
+def get_loader(args, shuffle=True):
+    dataset = Segmentation_Dataset(args.segdata_root)
     length = len(dataset)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    loader = DataLoader(dataset, batch_size=args.seg_batch, shuffle=shuffle, num_workers=args.num_workers)
     return dataset, length, loader

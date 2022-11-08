@@ -6,23 +6,22 @@ import os.path as osp
 
 
 def run(args):
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    #device = torch.device('cpu')
+    device = torch.device(args.device)
     print("train_translators device:", device)
-    Gxy, Gyx, Dx, Dy = translator.get_model_set(device)
+    Gxy, Gyx, Dx, Dy = translator.get_model_set(args)
+
     optimizer_G = torch.optim.Adam(
         params=list(Gxy.parameters()) + list(Gyx.parameters()), lr=args.trans_lr, weight_decay=0.0001)
     optimizer_Dx = torch.optim.Adam(
         params=Dx.parameters(), lr=args.trans_lr, weight_decay=0.0001)
     optimizer_Dy = torch.optim.Adam(
         params=Dy.parameters(), lr=args.trans_lr, weight_decay=0.0001)
+    
     _, train_dataset_size, train_loader = load_jsrt.get_loader(
-        args.data_root, split="train")
+        args, split="train")
     _, test_dataset_size, test_loader = load_jsrt.get_loader(
-        args.data_root, split="test")
+        args, split="test")
+    
     best_ssim_xy = 0
     best_ssim_yx = 0
     for epoch in range(1, args.trans_epochs+1):
