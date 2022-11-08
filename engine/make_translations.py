@@ -6,22 +6,28 @@ import os.path as osp
 
 
 def run(args):
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    #device = torch.device('cpu')
+    tb, dp = args.trans_batch, args.dataparallel
+    args.trans_batch = 1
+    #args.dataparallel = False
+
+    device = torch.device(args.device)
     print("make_translations device:", device)
-    Gxy, Gyx, _, _ = translator.get_model_set(device)
+    Gxy, Gyx, _, _ = translator.get_model_set(args)
 
     Gxy.load_state_dict(torch.load(osp.join(
-        args.base, args.workspace, "saved_models", "Gxy_bm.pth"), map_location=device))
+        args.base, args.workspace, "saved_models", "Gxy_bm.pth")))
     Gyx.load_state_dict(torch.load(osp.join(
-        args.base, args.workspace, "saved_models", "Gym_bm.pth"), map_location=device))
+        args.base, args.workspace, "saved_models", "Gyx_bm.pth")))
+
+    
 
     _, dataset_size, loader = load_jsrt.get_loader(
-        args.data_root, split="all", get_maps=False)
+        args, split="all", get_maps=True)
+    
     TRANS.save_translations(Gxy, Gyx, loader, dataset_size, device, osp.join(
         args.base, args.workspace, "outputs"))
+    args.trans_batch = tb
+    args.dataparallel = dp
+    
     if torch.cuda.is_available():
         torch.cuda.empty_cache()

@@ -104,9 +104,16 @@ class Generator_v4(nn.Module):
             return out
 
 
-def get_model_set(device):
-    Gxy = Generator_v4().to(device)
-    Gyx = Generator_v4().to(device)
-    Dx = Discriminator().to(device)
-    Dy = Discriminator().to(device)
+def get_model_set(args):
+    Gxy, Gyx, Dx, Dy = Generator_v4(), Generator_v4(), Discriminator(), Discriminator()
+    if args.device == 'cuda' and args.dataparallel == True:
+        Gxy = torch.nn.DataParallel(Gxy).cuda()
+        Gyx = torch.nn.DataParallel(Gyx).cuda()
+        Dx = torch.nn.DataParallel(Dx).cuda()
+        Dy = torch.nn.DataParallel(Dy).cuda()
+    elif args.device == 'cuda' and args.dataparallel == False:
+        Gxy.to(args.device)
+        Gyx.to(args.device)
+        Dx.to(args.device)
+        Dy.to(args.device)
     return Gxy, Gyx, Dx, Dy

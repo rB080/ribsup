@@ -25,6 +25,6 @@ def segmentation_metrics(pred, mask):
     recc = torch.sum(recc).item()
     dice = (2*TP)/(2*TP+FP+FN)
     dice = torch.sum(dice).item()
-    dict = {"acc": acc, "sen": sen, "pre": prec,
-            "rec": recc, "dsc": dice, "iou": iou}
+    dict = {"acc": acc * pred.shape[0], "sen": sen * pred.shape[0], "pre": prec * pred.shape[0],
+            "rec": recc * pred.shape[0], "dsc": dice * pred.shape[0], "iou": iou * pred.shape[0]}
     return dict

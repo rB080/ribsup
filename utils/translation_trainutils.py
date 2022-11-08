@@ -34,7 +34,7 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
         log_Gyx = logger.create_log(
             osp.join(log_path, "Gyx_train_logs.json"), mode="translation")
 
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device)
@@ -136,7 +136,7 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
         log_Gyx = logger.create_log(
             osp.join(log_path, "Gyx_test_logs.json"), mode="translation")
 
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device)
@@ -166,7 +166,7 @@ def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
     Gyx.eval()
     print("==========================================================================")
     print("Generating Translations")
-    dataset_iterator = tqdm(enumerate(loader), total=dataset_size)
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY, name = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device), pack["name"]
@@ -177,9 +177,9 @@ def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
         pxy = np.array(pxy[0].detach().cpu(),
                        dtype=np.uint8).transpose(1, 2, 0)
         cv2.imwrite(osp.join(save_path, "Y_to_X",
-                    name[0].split("\\")[-1]), pyx)
+                    name[0].split("/")[-1]), pyx)
         cv2.imwrite(osp.join(save_path, "X_to_Y",
-                    name[0].split("\\")[-1]), pxy)
+                    name[0].split("/")[-1]), pxy)
     print("Done!")
     print("==========================================================================")
     print("==========================================================================")

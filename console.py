@@ -18,15 +18,22 @@ def str2bool(v):
 
 
 defaults = {
-    "base": r"E:\\Projects\\Ongoing\\Rib_Suppression_IIT\\Train_outputs",
-    "data_root": r"E:\\Projects\\Datasets\\Biomedical\\JSRT\\X-Ray Shadow Suppression Kaggle",
-    "segdata_root": r"E:\\Projects\\Datasets\\Biomedical\\CT_IITD"
+    "base": "/lustre07/scratch/rb080/work/Outputs",
+    "data_root": "/lustre07/scratch/rb080/work/Data/JSRT_dataset",
+    "segdata_root": "/lustre07/scratch/rb080/work/Data/segmentation_data"
 }
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser()
 
+    #Training settings
+    parser.add_argument('--device', default='cuda', type=str)
+    parser.add_argument('--dataparallel', default=True, type=str2bool)
+    parser.add_argument('--num_workers', default=0, type=int)
+    parser.add_argument('--seg_batch', default=64, type=int)
+    parser.add_argument('--trans_batch', default=64, type=int)
+    
     #Workspace and Paths
     parser.add_argument('--workspace', default='untitled_training', type=str)
     parser.add_argument('--log_name', default='new_log', type=str)
