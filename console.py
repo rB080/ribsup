@@ -1,7 +1,7 @@
 import argparse
 import os
 import os.path as osp
-from engine import train_segmentor, train_translators, make_segmentation, make_translations
+from engine import train_segmentor, train_translators, make_segmentation, make_translations, make_analysis
 import json
 from scope_tools.logger import Logger
 
@@ -19,10 +19,11 @@ def str2bool(v):
 
 defaults = {
     "base": "/lustre07/scratch/rb080/work/Outputs",
-    "data_root": "/lustre07/scratch/rb080/work/Data/JSRT_dataset",
+    "data_root": "/lustre07/scratch/rb080/work/Data",
     "segdata_root": "/lustre07/scratch/rb080/work/Data/segmentation_data"
 }
 
+datasets = {"jsrt":"JSRT_dataset", "unpaired":"Unpaired"}
 
 def get_args_parser():
     parser = argparse.ArgumentParser()
@@ -41,6 +42,7 @@ def get_args_parser():
     parser.add_argument('--data_root', default=defaults["data_root"], type=str)
     parser.add_argument(
         '--segdata_root', default=defaults["segdata_root"], type=str)
+    parser.add_argument('--dataset', default="jsrt", type=str)
 
     # Segmentation args
     parser.add_argument('--seg_epochs', default=50, type=int)
@@ -49,12 +51,17 @@ def get_args_parser():
     # Translation args
     parser.add_argument('--trans_epochs', default=100, type=int)
     parser.add_argument('--trans_lr', default=1e-5, type=float)
+    parser.add_argument('--ssim_weight', default=0.5, type=float)
+    parser.add_argument('--deep_supervision', default=True, type=str2bool)
+    parser.add_argument('--use_attention', default=True, type=str2bool)
+
 
     # Jobs
     parser.add_argument('--train_segmentor', default=False, type=str2bool)
     parser.add_argument('--make_segmentation', default=False, type=str2bool)
     parser.add_argument('--train_translators', default=False, type=str2bool)
     parser.add_argument('--make_translations', default=False, type=str2bool)
+    parser.add_argument('--make_analysis', default=False, type=str2bool)
 
     args = parser.parse_args()
     return args
@@ -62,6 +69,10 @@ def get_args_parser():
 
 args = get_args_parser()
 configs = vars(args)
+
+#Assertions
+assert args.dataset in ["jsrt", "unpaired"], "Invalid Dataset Entry!"
+args.data_root = osp.join(args.data_root, datasets[args.dataset])
 
 # Workspace creation:
 workbase = osp.join(args.base, args.workspace)
@@ -97,16 +108,22 @@ print("Console settings saved!")
 
 # Job lists:
 if args.train_segmentor:  # Segmentation model training
+    if osp.isfile(osp.join(log_base, "unet_train_logs.json")): os.remove(osp.join(log_base, "unet_train_logs.json"))
     print("Training Segmentation Model now!")
     train_segmentor.run(args)
     print("Segmentation Model Training Done!!")
 
 if args.make_segmentation:  # Save segmentation maps from pretrained model
+    
     print("Saving attention maps from pretrained segmentation model now!")
     make_segmentation.run(args)
     print("Attention maps saved successfully!!")
 
 if args.train_translators:  # Train the CycleGANs for image translation
+    if osp.isfile(osp.join(log_base, "Gxy_train_logs.json")): os.remove(osp.join(log_base, "Gxy_train_logs.json"))
+    if osp.isfile(osp.join(log_base, "Gyx_train_logs.json")): os.remove(osp.join(log_base, "Gyx_train_logs.json"))
+    if osp.isfile(osp.join(log_base, "Gxy_test_logs.json")): os.remove(osp.join(log_base, "Gxy_test_logs.json"))
+    if osp.isfile(osp.join(log_base, "Gyx_test_logs.json")): os.remove(osp.join(log_base, "Gyx_test_logs.json"))
     print("Starting CycleGAN trianing now!")
     train_translators.run(args)
     print("Translation models trained!!")
@@ -115,3 +132,8 @@ if args.make_translations:  # Generate translated images for visualization
     print("Generating translation predictions now!")
     make_translations.run(args)
     print("Translation predictions saved!!")
+
+if args.make_analysis:  # Generate analysis
+    print("Analysing!")
+    make_analysis.run(args)
+    print("Analyses saved!!")
