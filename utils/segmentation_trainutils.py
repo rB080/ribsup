@@ -74,3 +74,26 @@ def save_data(model, loader, dataset_size, device, save_path):
     print("Done!")
     print("==========================================================================")
     print("==========================================================================")
+
+
+def save_unpaired_data(model, loader, dataset_size, device, save_path):
+    model.eval()
+    print("==========================================================================")
+    print("Generating Masks")
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
+    if osp.isdir(osp.join(save_path, "mapX")) == False:
+        os.makedirs(osp.join(save_path, "mapX"))
+    if osp.isdir(osp.join(save_path, "mapY")) == False:
+        os.makedirs(osp.join(save_path, "mapY"))
+    for batch_idx, pack in dataset_iterator:
+        img, name, img_type = pack["img"].to(
+            device), pack["name"], pack["type"]
+        pred = model(img)*255.0
+        pred = np.array(pred[0].detach().cpu(),
+                         dtype=np.uint8).transpose(1, 2, 0)
+
+        cv2.imwrite(osp.join(save_path, "map"+img_type[0],
+                    name[0].split("/")[-1]), pred)
+    print("Done!")
+    print("==========================================================================")
+    print("==========================================================================")
