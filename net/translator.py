@@ -63,11 +63,12 @@ class Generator_v4(nn.Module):
 
         # self.outa = UNet()
 
-    def forward(self, x, attention_map, deep_supervision=True):
+    def forward(self, x, attention_map, deep_supervision=True, attention=True):
         # unet 2
-
+        #print(x.shape, attention_map.shape)
         amap1 = self.mp(attention_map)
         amap2 = self.mp(amap1)
+        
 
         # unet main
 
@@ -85,12 +86,18 @@ class Generator_v4(nn.Module):
         # x4 = self.sa4(x4)
 
         # y4 = self.up4(xb, x4)
+        #print(amap1.shape, amap2.shape, attention_map.shape)
         y3 = self.up3(xb, x3)
-        y3 = torch.cat((amap2, y3), 1)
+        if attention: y3 = torch.cat((amap2, y3), 1)
+        else: y3 = torch.cat((amap2 * 0.0, y3), 1)
+        
         y2 = self.up2(y3, x2)
-        y2 = torch.cat((amap1, y2), 1)
+        if attention: y2 = torch.cat((amap1, y2), 1)
+        else: y2 = torch.cat((amap1 * 0.0, y2), 1)
+
         y1 = self.up1(y2, x1)
-        y1 = torch.cat((attention_map, y1), 1)
+        if attention: y1 = torch.cat((attention_map, y1), 1)
+        else: y1 = torch.cat((attention_map * 0.0, y1), 1)
 
         out = self.outconv(y1)
         out1 = self.outconv1(y2)
