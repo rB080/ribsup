@@ -86,18 +86,19 @@ class Generator_v4(nn.Module):
         # x4 = self.sa4(x4)
 
         # y4 = self.up4(xb, x4)
-        #print(amap1.shape, amap2.shape, attention_map.shape)
+        
         y3 = self.up3(xb, x3)
+        print(torch.mean(y3, 3).shape, y3.shape, amap2.shape)
         if attention: y3 = torch.cat((amap2, y3), 1)
-        else: y3 = torch.cat((amap2 * 0.0, y3), 1)
+        else: y3 = torch.cat((torch.mean(y3, 0), y3), 1)
         
         y2 = self.up2(y3, x2)
         if attention: y2 = torch.cat((amap1, y2), 1)
-        else: y2 = torch.cat((amap1 * 0.0, y2), 1)
+        else: y2 = torch.cat((torch.mean(y2, 0), y2), 1)
 
         y1 = self.up1(y2, x1)
         if attention: y1 = torch.cat((attention_map, y1), 1)
-        else: y1 = torch.cat((attention_map * 0.0, y1), 1)
+        else: y1 = torch.cat((torch.mean(y1, 0), y1), 1)
 
         out = self.outconv(y1)
         out1 = self.outconv1(y2)
