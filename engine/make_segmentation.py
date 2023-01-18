@@ -1,5 +1,5 @@
 from net import unet
-from data import load_jsrt
+from data import load_jsrt, load_unpaired
 import torch
 from utils import segmentation_trainutils as SEG
 import os.path as osp
@@ -16,10 +16,20 @@ def run(args):
     tb = args.trans_batch
     args.trans_batch = 1
 
-    _, dataset_size, loader = load_jsrt.get_loader(
-        args, split="all", get_maps=False)
+    if args.dataset == "jsrt":
+        _, dataset_size, loader = load_jsrt.get_loader(
+            args, split="all", get_maps=False)
+        
+        SEG.save_data(model, loader, dataset_size, device, args.data_root)
+    else:
+        _, dataset_size, loader = load_unpaired.get_unpaired_loader(
+            args, split="train", get_maps=False)
+        SEG.save_unpaired_data(model, loader, dataset_size, device, args.data_root+"/Train")
+
+        _, dataset_size, loader = load_unpaired.get_unpaired_loader(
+            args, split="test", get_maps=False)
+        SEG.save_unpaired_data(model, loader, dataset_size, device, args.data_root+"/Test")
     
-    SEG.save_data(model, loader, dataset_size, device, args.data_root)
     args.trans_batch = tb
     
     if torch.cuda.is_available():

@@ -13,7 +13,7 @@ def fake_mse_loss(D_out):
     return torch.mean(D_out ** 2)
 
 
-def cycle_consistency_loss(real_im, reconstructed_im, lambda_weight, ssim_weight=0):
+def cycle_consistency_loss(real_im, reconstructed_im, lambda_weight, ssim_weight=0.5):
     # calculate reconstruction loss
     # return weighted loss
     ssim = SSIM().forward(real_im, reconstructed_im)

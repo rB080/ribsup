@@ -12,7 +12,13 @@ def get_lr(optimizer):
         return param_group['lr']
 
 
-def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, optimizer_Dx, optimizer_Dy, device, log_path):
+def train_one_epoch(epoch, 
+                    Gxy, Gyx, Dx, Dy, 
+                    loader, dataset_size, 
+                    optimizer_G, optimizer_Dx, optimizer_Dy, 
+                    device, log_path, ssim_weight=0.5,
+                    deep_supervise=True, 
+                    use_attention=True):
     Gxy.train()
     Gyx.train()
     Dx.train()
@@ -40,8 +46,8 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
             device), pack["mapX"].to(device), pack["mapY"].to(device)
 
         # Discriminator train:
-        pyx = Gyx.forward(imY, mapY, deep_supervision=False)
-        pxy = Gxy.forward(imX, mapX, deep_supervision=False)
+        pyx = Gyx.forward(imY, mapY, deep_supervision=False, attention=use_attention)
+        pxy = Gxy.forward(imX, mapX, deep_supervision=False, attention=use_attention)
 
         #Train: Dx
         optimizer_Dx.zero_grad()
@@ -67,8 +73,8 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
 
         pyx, pxy = 0, 0
         # Generator train:
-        pyx = Gyx.forward(imY, mapY, deep_supervision=False)
-        pxy = Gxy.forward(imX, mapX, deep_supervision=False)
+        pyx = Gyx.forward(imY, mapY, deep_supervision=False, attention=use_attention)
+        pxy = Gxy.forward(imX, mapX, deep_supervision=False, attention=use_attention)
         optimizer_G.zero_grad()
         maxpool = nn.MaxPool2d(2)
         imX1 = maxpool(imX)
@@ -76,17 +82,28 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
         imY1 = maxpool(imY)
         imY2 = maxpool(imY1)
 
-        # Forward cycle: Y-X-Y
-        Ly1 = losses.real_mse_loss(Dx(pyx))
-        pyxy, pyxy1, pyxy2 = Gxy.forward(pyx, mapX, deep_supervision=True)
-        Ly2 = losses.cycle_consistency_loss(imY, pyxy, 10) + losses.cycle_consistency_loss(
-            imY1, pyxy1, 10) + losses.cycle_consistency_loss(imY2, pyxy2, 10)
+        if deep_supervise:
+            # Forward cycle: Y-X-Y
+            Ly1 = losses.real_mse_loss(Dx(pyx))
+            pyxy, pyxy1, pyxy2 = Gxy.forward(pyx, mapX, deep_supervision=True, attention=use_attention)
+            Ly2 = losses.cycle_consistency_loss(imY, pyxy, 10) + losses.cycle_consistency_loss(
+                imY1, pyxy1, 10) + losses.cycle_consistency_loss(imY2, pyxy2, 10)
 
-        # Forward cycle: X-Y-X
-        Lx1 = losses.real_mse_loss(Dy(pxy))
-        pxyx, pxyx1, pxyx2 = Gyx.forward(pxy, mapY, deep_supervision=True)
-        Lx2 = losses.cycle_consistency_loss(imX, pxyx, 10) + losses.cycle_consistency_loss(
-            imX1, pxyx1, 10) + losses.cycle_consistency_loss(imX2, pxyx2, 10)
+            # Forward cycle: X-Y-X
+            Lx1 = losses.real_mse_loss(Dy(pxy))
+            pxyx, pxyx1, pxyx2 = Gyx.forward(pxy, mapY, deep_supervision=True, attention=use_attention)
+            Lx2 = losses.cycle_consistency_loss(imX, pxyx, 10, ssim_weight) + losses.cycle_consistency_loss(
+                imX1, pxyx1, 10, ssim_weight) + losses.cycle_consistency_loss(imX2, pxyx2, 10, ssim_weight)
+        else:
+            # Forward cycle: Y-X-Y
+            Ly1 = losses.real_mse_loss(Dx(pyx))
+            pyxy = Gxy.forward(pyx, mapX, deep_supervision=False, attention=use_attention)
+            Ly2 = losses.cycle_consistency_loss(imY, pyxy, 10, ssim_weight)
+
+            # Forward cycle: X-Y-X
+            Lx1 = losses.real_mse_loss(Dy(pxy))
+            pxyx = Gyx.forward(pxy, mapY, deep_supervision=False, attention=use_attention)
+            Lx2 = losses.cycle_consistency_loss(imX, pxyx, 10, ssim_weight)
 
         #Loss and Backprop
         gLoss = Lx1 + Lx2 + Ly1 + Ly2
@@ -116,7 +133,7 @@ def train_one_epoch(epoch, Gxy, Gyx, Dx, Dy, loader, dataset_size, optimizer_G, 
     return epoch_data_Gxy, epoch_data_Gyx
 
 
-def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
+def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path, use_attention=True):
     Gxy.eval()
     Gyx.eval()
     epoch_data_Gxy = {"epochs": epoch, "lr": 0,
@@ -140,8 +157,8 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device)
-        pyx = Gyx.forward(imY, mapY, deep_supervision=False)
-        pxy = Gxy.forward(imX, mapX, deep_supervision=False)
+        pyx = Gyx.forward(imY, mapY, deep_supervision=False, attention=use_attention)
+        pxy = Gxy.forward(imX, mapX, deep_supervision=False, attention=use_attention)
         trmets_xy = translation_metrics.translation_metrics(imY, pxy)
         trmets_yx = translation_metrics.translation_metrics(imX, pyx)
         for k in trmets_xy.keys():
@@ -161,7 +178,7 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path):
     return epoch_data_Gxy, epoch_data_Gyx
 
 
-def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
+def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path, use_attention=True):
     Gxy.eval()
     Gyx.eval()
     print("==========================================================================")
@@ -170,8 +187,8 @@ def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
     for batch_idx, pack in dataset_iterator:
         imX, imY, mapX, mapY, name = pack["imX"].to(device), pack["imY"].to(
             device), pack["mapX"].to(device), pack["mapY"].to(device), pack["name"]
-        pyx = Gyx.forward(imY, mapY, deep_supervision=False) * 255.0
-        pxy = Gxy.forward(imX, mapX, deep_supervision=False) * 255.0
+        pyx = Gyx.forward(imY, mapY, deep_supervision=False, attention=use_attention) * 255.0
+        pxy = Gxy.forward(imX, mapX, deep_supervision=False, attention=use_attention) * 255.0
         pyx = np.array(pyx[0].detach().cpu(),
                        dtype=np.uint8).transpose(1, 2, 0)
         pxy = np.array(pxy[0].detach().cpu(),
@@ -180,6 +197,35 @@ def save_translations(Gxy, Gyx, loader, dataset_size, device, save_path):
                     name[0].split("/")[-1]), pyx)
         cv2.imwrite(osp.join(save_path, "X_to_Y",
                     name[0].split("/")[-1]), pxy)
+    print("Done!")
+    print("==========================================================================")
+    print("==========================================================================")
+
+def save_unpaired_translations(Gxy, Gyx, loader, dataset_size, device, save_path, use_attention=True):
+    Gxy.eval()
+    Gyx.eval()
+    print("==========================================================================")
+    print("Generating Translations")
+    dataset_iterator = tqdm(enumerate(loader), total=len(loader))
+    for batch_idx, pack in dataset_iterator:
+        #print(pack["img"].shape, pack["map"].shape)
+        img, mask, name, img_type = pack["img"].to(device), pack["map"].to(
+            device), pack["name"], pack["type"]
+        
+        if img_type[0] == "X": 
+            dir_name = "X_to_Y"
+            model = Gxy
+        else:
+            dir_name = "Y_to_X"
+            model = Gyx
+        
+        pred = model.forward(img, mask, deep_supervision=False, attention=use_attention) * 255.0
+        
+        pred = np.array(pred[0].detach().cpu(),
+                       dtype=np.uint8).transpose(1, 2, 0)
+
+        cv2.imwrite(osp.join(save_path, dir_name,
+                    name[0].split("/")[-1]), pred)
     print("Done!")
     print("==========================================================================")
     print("==========================================================================")
