@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 *.pth
 *.npy
-*_exc.py
+*_exc.*
 
 
 # C extensions
