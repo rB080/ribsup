@@ -10,3 +10,4 @@ tqdm
 tensorboard
 #sklearn
 argparse
+pytorch-msssim

@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn.functional as F
+from pytorch_msssim import ms_ssim
 
 
 def gaussian(window_size, sigma):
@@ -104,11 +105,14 @@ class SSIM(torch.nn.Module):
 
 def psnr(img1, img2):
     mse = torch.mean((img1 - img2) ** 2)
-    return 20 * torch.log10(255.0 / torch.sqrt(mse))
+    return 10 * torch.log10(255.0 / torch.sqrt(mse))
 
+def get_ms_ssim(img1, img2):
+    return ms_ssim(img1, img2, data_range=1, size_average=True)
 
 def translation_metrics(img, pred):
     ssim = SSIM().forward(img, pred)
     psnr_score = psnr(img, pred)
-    dict = {"ssim": ssim * img.shape[0], "psnr": psnr_score * img.shape[0]}
+    ms_ssim_score = get_ms_ssim(img, pred)
+    dict = {"ssim": ssim * img.shape[0], "psnr": psnr_score * img.shape[0], "ms_ssim": ms_ssim_score}
     return dict

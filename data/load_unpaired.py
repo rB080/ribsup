@@ -171,6 +171,10 @@ class Translation_Dataset(Dataset):
         if get_maps:
             if split == "train": self.imX, self.imY, self.mapX, self.mapY = read_dataset(self.root)
             else: self.imX, self.imY, self.mapX, self.mapY = read_dataset(self.root, train=False)
+            self.imX = self.imX[:-1]
+            self.imY = self.imY[:-1]
+            self.mapX = self.mapX[:-1]
+            self.mapY = self.mapY[:-1]
             print('num imX = ', len(self.imX))
             print('num imY = ', len(self.imY))
             print('num maps of each kind = ', len(self.mapX), len(self.mapY))

@@ -24,9 +24,9 @@ def train_one_epoch(epoch,
     Dx.train()
     Dy.train()
     epoch_data_Gxy = {"epochs": epoch, "lr": get_lr(
-        optimizer_G), "loss": 0, "ssim": 0, "psnr": 0}
+        optimizer_G), "loss": 0, "ssim": 0, "psnr": 0, "ms_ssim": 0}
     epoch_data_Gyx = {"epochs": epoch, "lr": get_lr(
-        optimizer_G), "loss": 0, "ssim": 0, "psnr": 0}
+        optimizer_G), "loss": 0, "ssim": 0, "psnr": 0, "ms_ssim": 0}
     print("==========================================================================")
     print("Training models: Epoch:", epoch)
     if osp.isfile(osp.join(log_path, "Gxy_train_logs.json")) and osp.isfile(osp.join(log_path, "Gyx_train_logs.json")):
@@ -137,9 +137,9 @@ def test_one_epoch(epoch, Gxy, Gyx, loader, dataset_size, device, log_path, use_
     Gxy.eval()
     Gyx.eval()
     epoch_data_Gxy = {"epochs": epoch, "lr": 0,
-                      "loss": 0, "ssim": 0, "psnr": 0}
+                      "loss": 0, "ssim": 0, "psnr": 0, "ms_ssim": 0}
     epoch_data_Gyx = {"epochs": epoch, "lr": 0,
-                      "loss": 0, "ssim": 0, "psnr": 0}
+                      "loss": 0, "ssim": 0, "psnr": 0, "ms_ssim": 0}
     print("==========================================================================")
     print("Testing")
     if osp.isfile(osp.join(log_path, "Gxy_test_logs.json")) and osp.isfile(osp.join(log_path, "Gyx_test_logs.json")):

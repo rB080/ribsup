@@ -31,7 +31,7 @@ def get_args_parser():
     #Training settings
     parser.add_argument('--device', default='cuda', type=str)
     parser.add_argument('--dataparallel', default=True, type=str2bool)
-    parser.add_argument('--num_workers', default=0, type=int)
+    parser.add_argument('--num_workers', default=16, type=int) #changed
     parser.add_argument('--seg_batch', default=64, type=int)
     parser.add_argument('--trans_batch', default=64, type=int)
     
