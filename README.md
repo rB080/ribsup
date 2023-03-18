@@ -19,6 +19,10 @@ pip install -r reqs.txt
 ```
 
 ### Run Console:
+We use argparser based driver programme that is basically the omnitool for every aspect of the training run. The training runs and evaluations can be executed as:
+
 ```
-python console.py --workspace exp1 --log_name operation_logs --base path/to/workspace/directory --segdata_root path/to/segmentation/dataset --data_root path/to/JSRT/dataset --seg_epochs 10 --seg_lr 1e-3 --trans_epochs 100 --trans_lr 1e-5 --train_segmentor True --make_segmentation True --train_translators True --make_translations True
+python console.py --arg_1 arg_val_1 --arg_2 arg_val_2 ...
 ```
+
+A complete list of arguments and use cases will be added to the documentation soon.

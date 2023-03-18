@@ -7,7 +7,7 @@ opencv-python
 #scipy
 tqdm
 #scikit-image
-tensorboard
+#tensorboard
 #sklearn
 argparse
 pytorch-msssim
